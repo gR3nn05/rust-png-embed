@@ -51,14 +51,14 @@ The PNG standard supports **ancillary chunks**—custom, non-essential data bloc
 ### Data Embedding Process
 
 1. **Parse the PNG:** The tool reads and parses all chunks, preserving their order.
-2. **Create a Custom Chunk:** Your payload is wrapped in a new ancillary chunk (e.g., `rSte` for "Rustego"). Custom chunk names are chosen to avoid conflicts.
+2. **Create a Custom Chunk:** Your payload is wrapped in a new ancillary chunk. Custom chunk names are chosen to avoid conflicts.
 3. **Insert Custom Chunk:** The new chunk is inserted just before the final `IEND` chunk, which is the standard place for metadata or custom extensions.
 4. **Write the New PNG:** All chunks, including the new one, are written to the output image. The image content is untouched, so it appears identical in any viewer.
 
 ### Data Extraction Process
 
 1. **Parse the PNG:** The tool scans through all chunks.
-2. **Locate the Custom Chunk:** It searches for the specific custom chunk type used by Rustego.
+2. **Locate the Custom Chunk:** It searches for the specific custom chunk type used by the too;.
 3. **Extract the Payload:** The data is read from the chunk and saved to the specified output.
 
 ### Why This Is Safe and Effective
