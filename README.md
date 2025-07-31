@@ -1,6 +1,6 @@
 # rust-png-embed
 
-A Rust library and CLI tool for embedding and extracting custom data within PNG image files. Designed for efficiency, cross-platform compatibility, and educational purposes.
+A Rust CLI tool for embedding and extracting custom data within PNG image files. Designed for efficiency, cross-platform compatibility, and educational purposes.
 
 ## Features
 
@@ -12,13 +12,7 @@ A Rust library and CLI tool for embedding and extracting custom data within PNG 
 
 ## Installation
 
-You can install `rust-png-embed` using Cargo:
-
-```sh
-cargo install rust-png-embed
-```
-
-Alternatively, clone the repository and build manually:
+Clone the repository and build manually:
 
 ```sh
 git clone https://github.com/gR3nn05/rust-png-embed.git
@@ -28,7 +22,6 @@ cargo build --release
 
 ## Usage
 
-### CLI Tool
 
 **Embed Data:**
 
@@ -42,35 +35,40 @@ rust-png-embed embed --input image.png --data secret.txt --output embedded.png
 rust-png-embed extract --input embedded.png --output extracted.txt
 ```
 
-### Library
-
-Add the following to your `Cargo.toml`:
-
-```toml
-[dependencies]
-rust-png-embed = "0.1"
-```
-
-Example usage in Rust:
-
-```rust
-use rust_png_embed::{embed_data, extract_data};
-
-fn main() {
-    let input_image = "image.png";
-    let output_image = "embedded.png";
-    let data = b"Secret payload!";
-    embed_data(input_image, data, output_image).expect("Embedding failed");
-
-    let extracted = extract_data(output_image).expect("Extraction failed");
-    assert_eq!(data, &extracted[..]);
-}
-```
 
 ## How It Works
 
-This tool leverages the PNG file format's extensibility by inserting custom ancillary chunks to carry your data. These chunks do not interfere with image rendering and remain undetectable to standard image viewers.
+### PNG File Structure
 
+A PNG file consists of a signature followed by a series of "chunks." Each chunk has:
+- **Length** (4 bytes)
+- **Chunk Type** (4 bytes, e.g., `IHDR`, `IDAT`, `IEND`)
+- **Chunk Data** (variable length)
+- **CRC** (4 bytes, for integrity)
+
+The PNG standard supports **ancillary chunks**—custom, non-essential data blocks that do not affect image display or validity.
+
+### Data Embedding Process
+
+1. **Parse the PNG:** The tool reads and parses all chunks, preserving their order.
+2. **Create a Custom Chunk:** Your payload is wrapped in a new ancillary chunk (e.g., `rSte` for "Rustego"). Custom chunk names are chosen to avoid conflicts.
+3. **Insert Custom Chunk:** The new chunk is inserted just before the final `IEND` chunk, which is the standard place for metadata or custom extensions.
+4. **Write the New PNG:** All chunks, including the new one, are written to the output image. The image content is untouched, so it appears identical in any viewer.
+
+### Data Extraction Process
+
+1. **Parse the PNG:** The tool scans through all chunks.
+2. **Locate the Custom Chunk:** It searches for the specific custom chunk type used by Rustego.
+3. **Extract the Payload:** The data is read from the chunk and saved to the specified output.
+
+### Why This Is Safe and Effective
+
+- **Visual Integrity:** Image data (`IDAT` chunk) is never modified, so the PNG looks the same.
+- **Standard Compliance:** Ancillary chunks are part of the PNG spec; viewers ignore unknown chunks but preserve them.
+- **File Integrity:** The PNG’s CRC mechanism ensures corrupted chunks are detected and ignored.
+- **Stealth:** No pixel manipulation; data is stored invisibly and non-destructively.
+
+---
 ## Use Cases
 
 - Steganography and digital watermarking
